@@ -53,27 +53,35 @@ const MobForm = ({ onSubmit }) => {
 const MobsterListItem = ({ mobster }) => <div>{mobster.name}</div>;
 
 const MobTimer = ({ id, mob, onChange }) => {
-  console.log(mob);
   return (
     <div>
       <button>Start</button>
       <div>
         <label>
           Interval:
-          <input type="number" defaultValue={mob.interval} />
+          <input
+            type="number"
+            value={mob.interval}
+            onChange={(e) => {
+              onChange({ ...mob, interval: parseInt(e.target.value, 10) });
+            }}
+          />
         </label>
         minutes
       </div>
       <MobForm
         onSubmit={(name) => {
-          //TODO
+          onChange({
+            ...mob,
+            mobsters: [{ id: shortid.generate(), name }].concat(mob.mobsters),
+          });
         }}
       />
       {mob.mobsters.length < 1 && <div>Add your first mobster</div>}
       {mob.mobsters.length > 0 && (
         <div>
           {mob.mobsters.map((mobster) => {
-            return <MobsterListItem mobster={mobster} />;
+            return <MobsterListItem key={mobster.id} mobster={mobster} />;
           })}
         </div>
       )}
@@ -90,31 +98,30 @@ const RemoteData = {
 
 const MobLoader = ({ id }) => {
   const [mob, setMob] = useState(RemoteData.Loading);
-
+  const docRef = firebase.firestore().collection("mobs").doc(id);
   useEffect(() => {
-    firebase
-      .firestore()
-      .collection("mobs")
-      .doc(id)
-      .get()
-      .then((doc) => {
-        if (doc.exists) {
-          console.log("mob loaded", doc.data());
-          setMob(RemoteData.Loaded(doc.data()));
-        } else {
-          setMob(RemoteData.NotFound);
-        }
-      })
-      .catch((err) => {
-        setMob(RemoteData.Error(err));
-      });
+    docRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        setMob(RemoteData.Loaded(doc.data()));
+      } else {
+        setMob(RemoteData.NotFound);
+      }
+    });
   }, [id]);
 
   const dispatch = {
     loading: () => <Loading />,
     error: () => <Error />,
     notfound: () => <NotFound />,
-    loaded: ({ data }) => <MobTimer id={id} mob={data} />,
+    loaded: ({ data }) => (
+      <MobTimer
+        id={id}
+        mob={data}
+        onChange={(mob) => {
+          docRef.set(mob);
+        }}
+      />
+    ),
   };
 
   const f = dispatch[mob.type];
