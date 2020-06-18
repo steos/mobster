@@ -13,7 +13,7 @@ import * as Mob from "./Mob";
 
 export const computeRemaining = (now, interval, start) => {
   const elapsed = now - start;
-  const target = interval * 60000;
+  const target = interval * 6000;
   const remainingMillis = target - elapsed;
   const remainingSecs = Math.floor(remainingMillis / 1000);
   return {
@@ -102,6 +102,7 @@ const MobTimerIdle = ({ mob, onChange, onStart }) => {
 
 const NextUp = ({ mob, onSwitch, onStop }) => (
   <div>
+    <h2>Switch it up!</h2>
     <div>{Mob.nextMobster(mob).name}, it's your turn!</div>
     <button onClick={onSwitch}>Switch</button>
     <button onClick={onStop}>Stop</button>
@@ -123,7 +124,7 @@ const Countdown = ({ current, next, time, onStop }) => {
   );
 };
 
-const MobTimerRunning = ({ mob, onSwitch, onStop }) => {
+const MobTimerRunning = ({ mob, onSwitch, onStop, onZero }) => {
   const { remainingSecs } = computeRemainingNow(mob.interval, mob.start);
   const [time, setTime] = useState(remainingSecs);
   useEffect(() => {
@@ -133,6 +134,8 @@ const MobTimerRunning = ({ mob, onSwitch, onStop }) => {
       if (remainingSecs >= 0) {
         setTime(remainingSecs);
         raf = requestAnimationFrame(update);
+      } else {
+        onZero();
       }
     };
     raf = requestAnimationFrame(update);
@@ -154,6 +157,13 @@ const MobTimerRunning = ({ mob, onSwitch, onStop }) => {
 };
 
 const MobTimer = ({ id, mob, onChange }) => {
+  let notification = React.useRef(null);
+  const clearNotification = () => {
+    if (notification.current) {
+      notification.current.close();
+      notification.current = null;
+    }
+  };
   if (mob.state === "idle") {
     return (
       <MobTimerIdle
@@ -172,10 +182,21 @@ const MobTimer = ({ id, mob, onChange }) => {
     return (
       <MobTimerRunning
         mob={mob}
+        onZero={() => {
+          notification.current = new Notification("Switch it up!", {
+            tag: "mobster-switch",
+            body: Mob.nextMobster(mob).name + ", it's your turn!",
+          });
+          notification.current.onclick = () => {
+            onChange(Mob.switchMobster(mob));
+          };
+        }}
         onSwitch={() => {
+          clearNotification();
           onChange(Mob.switchMobster(mob));
         }}
         onStop={() => {
+          clearNotification();
           onChange(Mob.stopTimer(mob));
         }}
       />
@@ -222,6 +243,10 @@ const MobLoader = ({ id }) => {
 
 const App = () => {
   const history = useHistory();
+  const [creating, setCreating] = useState(false);
+  if (creating) {
+    return <div>creating</div>;
+  }
   return (
     <Switch>
       <Route path="/mob/:id">
@@ -230,6 +255,7 @@ const App = () => {
       <Route path="/">
         <Home
           onCreate={async () => {
+            setCreating(true);
             const id = shortid.generate();
             await firebase
               .firestore()
@@ -237,6 +263,7 @@ const App = () => {
               .doc(id)
               .set(Mob.createEmpty());
             history.push("/mob/" + id);
+            setCreating(false);
           }}
         />
       </Route>
@@ -268,6 +295,9 @@ const initFirebase = () =>
   });
 
 const main = async () => {
+  Notification.requestPermission(function (perm) {
+    //handle denied
+  });
   const app = await initFirebase();
   render(app);
 };
