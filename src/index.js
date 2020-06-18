@@ -16,6 +16,49 @@ const omit = (key, obj) => {
   return copy;
 };
 
+const computeRemaining = (now, interval, start) => {
+  const elapsed = now - start;
+  const target = interval * 60000;
+  const remainingMillis = target - elapsed;
+  const remainingSecs = Math.floor(remainingMillis / 1000);
+  return {
+    now,
+    elapsed,
+    target,
+    remainingMillis,
+    remainingSecs,
+  };
+};
+
+const computeRemainingNow = (interval, start) =>
+  computeRemaining(new Date().getTime(), interval, start);
+
+const findMobsterIndexById = (mob, id) =>
+  mob.mobsters.findIndex((mobster) => mobster.id === id);
+
+const nextMobster = (mob) => {
+  const index = findMobsterIndexById(mob, mob.currentMobster);
+  return mob.mobsters[(index + 1) % mob.mobsters.length];
+};
+
+const currentMobster = (mob) =>
+  mob.mobsters[findMobsterIndexById(mob, mob.currentMobster)];
+
+const switchMobster = (mob) => ({
+  ...mob,
+  currentMobster: nextMobster(mob).id,
+  start: new Date().getTime(),
+});
+
+const stopTimer = (mob) => ({ ...mob, state: "idle", start: null });
+
+const startTimer = (mob) => ({
+  ...mob,
+  state: "running",
+  currentMobster: mob.currentMobster ?? mob.mobsters[0].id,
+  start: new Date().getTime(),
+});
+
 const Home = ({ onCreate }) => {
   return (
     <div>
@@ -52,10 +95,12 @@ const MobForm = ({ onSubmit }) => {
 
 const MobsterListItem = ({ mobster }) => <div>{mobster.name}</div>;
 
-const MobTimer = ({ id, mob, onChange }) => {
+const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
     <div>
-      <button>Start</button>
+      <button disabled={mob.mobsters.length < 2} onClick={onStart}>
+        Start
+      </button>
       <div>
         <label>
           Interval:
@@ -89,6 +134,90 @@ const MobTimer = ({ id, mob, onChange }) => {
   );
 };
 
+const NextUp = ({ mob, onSwitch, onStop }) => (
+  <div>
+    <div>{nextMobster(mob).name}, it's your turn!</div>
+    <button onClick={onSwitch}>Switch</button>
+    <button onClick={onStop}>Stop</button>
+  </div>
+);
+
+const CountdownTimer = ({ time }) => {
+  return <div>T-{time} sec</div>;
+};
+
+const Countdown = ({ current, next, time, onStop }) => {
+  return (
+    <div>
+      <CountdownTimer time={time} />
+      <button onClick={onStop}>Stop</button>
+      <div>Current Mobster: {current.name}</div>
+      <div>Up next: {next.name}</div>
+    </div>
+  );
+};
+
+const MobTimerRunning = ({ mob, onSwitch, onStop }) => {
+  const { remainingSecs } = computeRemainingNow(mob.interval, mob.start);
+  const [time, setTime] = useState(remainingSecs);
+  useEffect(() => {
+    let raf = null;
+    const update = () => {
+      const { remainingSecs } = computeRemainingNow(mob.interval, mob.start);
+      if (remainingSecs >= 0) {
+        setTime(remainingSecs);
+        raf = requestAnimationFrame(update);
+      }
+    };
+    raf = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(raf);
+  }, [mob]);
+
+  if (time > 0) {
+    return (
+      <Countdown
+        time={time}
+        current={currentMobster(mob)}
+        next={nextMobster(mob)}
+        onStop={onStop}
+      />
+    );
+  } else {
+    return <NextUp mob={mob} onSwitch={onSwitch} onStop={onStop} />;
+  }
+};
+
+const MobTimer = ({ id, mob, onChange }) => {
+  if (mob.state === "idle") {
+    return (
+      <MobTimerIdle
+        mob={mob}
+        onChange={onChange}
+        onStart={() => {
+          // console.log("onstart");
+          if (mob.mobsters.length < 0) {
+            return;
+          }
+          onChange(startTimer(mob));
+        }}
+      />
+    );
+  } else if (mob.state === "running") {
+    return (
+      <MobTimerRunning
+        mob={mob}
+        onSwitch={() => {
+          onChange(switchMobster(mob));
+        }}
+        onStop={() => {
+          onChange(stopTimer(mob));
+        }}
+      />
+    );
+  }
+  return <Error />;
+};
+
 const RemoteData = {
   Loaded: (data) => ({ type: "loaded", data }),
   NotFound: { type: "notfound" },
@@ -109,7 +238,7 @@ const MobLoader = ({ id }) => {
     });
   }, [id]);
 
-  const dispatch = {
+  return {
     loading: () => <Loading />,
     error: () => <Error />,
     notfound: () => <NotFound />,
@@ -122,15 +251,10 @@ const MobLoader = ({ id }) => {
         }}
       />
     ),
-  };
-
-  const f = dispatch[mob.type];
-  if (f == null) throw new Error();
-  return f(mob);
+  }[mob.type](mob);
 };
 
 const App = () => {
-  //TODO
   const history = useHistory();
   return (
     <Switch>
@@ -146,6 +270,7 @@ const App = () => {
               interval: 10,
               currentMobster: null,
               state: "idle",
+              start: null,
             });
             history.push("/mob/" + id);
           }}
