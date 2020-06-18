@@ -9,14 +9,9 @@ import {
 import shortid from "shortid";
 import firebase from "firebase/app";
 import "firebase/firestore";
+import * as Mob from "./Mob";
 
-const omit = (key, obj) => {
-  const copy = Object.assign({}, obj);
-  delete copy[key];
-  return copy;
-};
-
-const computeRemaining = (now, interval, start) => {
+export const computeRemaining = (now, interval, start) => {
   const elapsed = now - start;
   const target = interval * 60000;
   const remainingMillis = target - elapsed;
@@ -30,34 +25,8 @@ const computeRemaining = (now, interval, start) => {
   };
 };
 
-const computeRemainingNow = (interval, start) =>
+export const computeRemainingNow = (interval, start) =>
   computeRemaining(new Date().getTime(), interval, start);
-
-const findMobsterIndexById = (mob, id) =>
-  mob.mobsters.findIndex((mobster) => mobster.id === id);
-
-const nextMobster = (mob) => {
-  const index = findMobsterIndexById(mob, mob.currentMobster);
-  return mob.mobsters[(index + 1) % mob.mobsters.length];
-};
-
-const currentMobster = (mob) =>
-  mob.mobsters[findMobsterIndexById(mob, mob.currentMobster)];
-
-const switchMobster = (mob) => ({
-  ...mob,
-  currentMobster: nextMobster(mob).id,
-  start: new Date().getTime(),
-});
-
-const stopTimer = (mob) => ({ ...mob, state: "idle", start: null });
-
-const startTimer = (mob) => ({
-  ...mob,
-  state: "running",
-  currentMobster: mob.currentMobster ?? mob.mobsters[0].id,
-  start: new Date().getTime(),
-});
 
 const Home = ({ onCreate }) => {
   return (
@@ -116,16 +85,13 @@ const MobTimerIdle = ({ mob, onChange, onStart }) => {
       </div>
       <MobForm
         onSubmit={(name) => {
-          onChange({
-            ...mob,
-            mobsters: [{ id: shortid.generate(), name }].concat(mob.mobsters),
-          });
+          onChange(Mob.addMobster(mob, name));
         }}
       />
-      {mob.mobsters.length < 1 && <div>Add your first mobster</div>}
-      {mob.mobsters.length > 0 && (
+      {!Mob.hasMobsters(mob) && <div>Add your first mobster</div>}
+      {Mob.hasMobsters(mob) && (
         <div>
-          {mob.mobsters.map((mobster) => {
+          {Mob.getMobsters(mob).map((mobster) => {
             return <MobsterListItem key={mobster.id} mobster={mobster} />;
           })}
         </div>
@@ -136,7 +102,7 @@ const MobTimerIdle = ({ mob, onChange, onStart }) => {
 
 const NextUp = ({ mob, onSwitch, onStop }) => (
   <div>
-    <div>{nextMobster(mob).name}, it's your turn!</div>
+    <div>{Mob.nextMobster(mob).name}, it's your turn!</div>
     <button onClick={onSwitch}>Switch</button>
     <button onClick={onStop}>Stop</button>
   </div>
@@ -177,8 +143,8 @@ const MobTimerRunning = ({ mob, onSwitch, onStop }) => {
     return (
       <Countdown
         time={time}
-        current={currentMobster(mob)}
-        next={nextMobster(mob)}
+        current={Mob.currentMobster(mob)}
+        next={Mob.nextMobster(mob)}
         onStop={onStop}
       />
     );
@@ -198,7 +164,7 @@ const MobTimer = ({ id, mob, onChange }) => {
           if (mob.mobsters.length < 0) {
             return;
           }
-          onChange(startTimer(mob));
+          onChange(Mob.startTimer(mob));
         }}
       />
     );
@@ -207,10 +173,10 @@ const MobTimer = ({ id, mob, onChange }) => {
       <MobTimerRunning
         mob={mob}
         onSwitch={() => {
-          onChange(switchMobster(mob));
+          onChange(Mob.switchMobster(mob));
         }}
         onStop={() => {
-          onChange(stopTimer(mob));
+          onChange(Mob.stopTimer(mob));
         }}
       />
     );
@@ -265,13 +231,11 @@ const App = () => {
         <Home
           onCreate={async () => {
             const id = shortid.generate();
-            await firebase.firestore().collection("mobs").doc(id).set({
-              mobsters: [],
-              interval: 10,
-              currentMobster: null,
-              state: "idle",
-              start: null,
-            });
+            await firebase
+              .firestore()
+              .collection("mobs")
+              .doc(id)
+              .set(Mob.createEmpty());
             history.push("/mob/" + id);
           }}
         />
