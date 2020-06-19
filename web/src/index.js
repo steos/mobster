@@ -14,7 +14,7 @@ import * as Mob from "./Mob";
 
 export const computeRemaining = (now, interval, start) => {
   const elapsed = now - start;
-  const target = interval * 6000;
+  const target = interval * 60000;
   const remainingMillis = target - elapsed;
   const remainingSecs = Math.floor(remainingMillis / 1000);
   return {
