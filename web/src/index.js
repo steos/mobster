@@ -9,6 +9,7 @@ import {
 import shortid from "shortid";
 import firebase from "firebase/app";
 import "firebase/firestore";
+import "firebase/functions";
 import * as Icon from "./icons";
 import * as Mob from "./Mob";
 
@@ -188,7 +189,7 @@ const MobTimerRunning = ({ mob, onSwitch, onStop, onZero }) => {
   }
 };
 
-const MobTimer = ({ id, mob, onChange, onNotify }) => {
+const MobTimer = ({ id, mob, onChange, onNotify, timeDelta }) => {
   const [volume, setVolume] = useState(50);
   return (
     <div>
@@ -201,7 +202,7 @@ const MobTimer = ({ id, mob, onChange, onNotify }) => {
               if (mob.mobsters.length < 0) {
                 return;
               }
-              onChange(Mob.startTimer(mob));
+              onChange(Mob.startTimer(mob, timeDelta));
             }}
           />
         ),
@@ -241,7 +242,7 @@ const RemoteData = {
   Loading: { type: "loading" },
 };
 
-const MobLoader = ({ id, onNotify, onClearNotification }) => {
+const MobLoader = ({ id, timeDelta, onNotify, onClearNotification }) => {
   const [mob, setMob] = useState(RemoteData.Loading);
   const docRef = firebase.firestore().collection("mobs").doc(id);
   useEffect(() => {
@@ -263,6 +264,7 @@ const MobLoader = ({ id, onNotify, onClearNotification }) => {
         id={id}
         mob={data}
         onNotify={onNotify}
+        timeDelta={timeDelta}
         onChange={(mob) => {
           onClearNotification();
           docRef.set(mob);
@@ -281,7 +283,7 @@ const loadAudio = (path) => {
   });
 };
 
-const App = ({ audio }) => {
+const App = ({ audio, timeDelta }) => {
   const history = useHistory();
   const [creating, setCreating] = useState(false);
   const audioRef = useRef(null);
@@ -307,6 +309,7 @@ const App = ({ audio }) => {
           <MobLoader
             id={match.params.id}
             onClearNotification={clearNotification}
+            timeDelta={timeDelta}
             onNotify={(mob, volume) => {
               if (window.captureScreen) {
                 window.captureScreen(location.href);
@@ -346,21 +349,23 @@ const App = ({ audio }) => {
   );
 };
 
-const render = () =>
+const render = (timeDelta) =>
   ReactDOM.render(
     <Router>
-      <App audio="/assets/bell.wav" />
+      <App audio="/assets/bell.wav" timeDelta={timeDelta} />
     </Router>,
     document.getElementById("root")
   );
+
+const isLocal = () => window.location.hostname === "localhost";
 
 const initFirebase = () =>
   fetch("/__/firebase/init.json").then(async (response) => {
     const app = firebase.initializeApp(await response.json());
     // console.log("firebase initialized");
-    if (window.location.hostname === "localhost") {
+    if (isLocal()) {
       console.debug("localhost detected, using firestore emulator");
-      firebase.firestore().settings({
+      app.firestore().settings({
         host: "localhost:8080",
         ssl: false,
       });
@@ -373,8 +378,22 @@ const main = async () => {
   Notification.requestPermission(function (perm) {
     //handle denied
   });
-  await initFirebase();
-  render();
+  const app = await initFirebase();
+  const fn = app.functions("europe-west3");
+  if (isLocal()) {
+    fn.useFunctionsEmulator("http://localhost:5001");
+  }
+  const getServerTime = fn.httpsCallable("now");
+  const start = new Date().getTime();
+  const { data } = await getServerTime({ now: start });
+  const now = new Date().getTime();
+  // const roundtrip = now - start;
+  const delta = now - data.now;
+  // console.log(data.delta, delta);
+  // console.log({ data, now, roundtrip });
+  const timeDelta = delta;
+  console.debug("time delta", timeDelta);
+  render(timeDelta);
 };
 
 main();
