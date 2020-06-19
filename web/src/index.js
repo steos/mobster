@@ -58,16 +58,29 @@ const NotFound = () => <div>not found</div>;
 
 const Error = () => <div>error</div>;
 
-const MobForm = ({ onSubmit }) => {
+const MobForm = ({ onSubmit, autoFocus }) => {
   const [name, setName] = useState("");
+  const isValid = name.trim().length > 0;
   return (
-    <div>
-      <h2>Add Mobster</h2>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
+    <div className="space-x-2 flex">
+      <input
+        autoFocus={autoFocus}
+        className="flex-auto p-2 text-lg border-b-2 outline-none border-gray-500 focus:border-blue-700 rounded-sm"
+        placeholder="Mobster Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyUp={(e) => {
+          if (e.key === "Enter" && isValid) {
+            onSubmit(name.trim());
+            setName("");
+          }
+        }}
+      />
       <button
-        className="btn"
+        className="bg-blue-500 rounded-sm py-2 px-4 text-gray-100 text-lg"
+        disabled={!isValid}
         onClick={() => {
-          onSubmit(name);
+          onSubmit(name.trim());
           setName("");
         }}
       >
@@ -78,15 +91,21 @@ const MobForm = ({ onSubmit }) => {
 };
 
 const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
-  <div className="flex space-x-2">
-    <div onClick={onSelect}>
-      {selected ? <Icon.CheckCircle /> : <Icon.Circle />}
+  <div
+    className="flex space-x-2 items-center hover:bg-gray-300 p-4 text-lg"
+    onClick={onSelect}
+  >
+    <div className="outline-none flex cursor-pointer space-x-2 flex-auto">
+      <div className="w-6 text-gray-500 flex items-center">
+        {selected ? <Icon.ArrowRight /> : null}
+      </div>
+      <div className="break-all flex-auto">{mobster.name}</div>
     </div>
-    <div>{mobster.name}</div>
     <button
-      className="btn"
+      className="text-gray-400 hover:text-gray-500"
       onClick={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onRemove();
       }}
     >
@@ -97,52 +116,73 @@ const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
 
 const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
-    <div>
-      <button
-        className="btn"
-        disabled={mob.mobsters.length < 2}
-        onClick={onStart}
-      >
-        Start
-      </button>
-      <div>
-        <label>
-          Interval:
-          <input
-            type="number"
-            value={mob.interval}
-            onChange={(e) => {
-              onChange({ ...mob, interval: parseInt(e.target.value, 10) });
-            }}
-          />
-        </label>
-        minutes
-      </div>
-      <MobForm
-        onSubmit={(name) => {
-          onChange(Mob.addMobster(mob, name));
-        }}
-      />
-      {!Mob.hasMobsters(mob) && <div>Add your first mobster</div>}
-      {Mob.hasMobsters(mob) && (
-        <div>
-          {Mob.getMobsters(mob).map((mobster) => {
-            return (
-              <MobsterListItem
-                key={mobster.id}
-                mobster={mobster}
-                selected={Mob.isSelectedMobster(mob, mobster)}
-                onRemove={() => {
-                  onChange(Mob.removeMobster(mob, mobster));
-                }}
-                onSelect={() => {
-                  onChange(Mob.setCurrentMobster(mob, mobster));
-                }}
-              />
-            );
-          })}
+    <div className="space-y-8 flex flex-col items-center">
+      <div className="flex justify-center items-center">
+        <button
+          className="p-2 border rounded-sm border-blue-500 text-blue-500"
+          onClick={() => {
+            onChange(Mob.setInterval(mob, mob.interval - 1));
+          }}
+        >
+          <Icon.Minus />
+        </button>
+        <div className="text-6xl w-64 flex justify-center items-center">
+          {mob.interval < 10 && "0"}
+          {mob.interval}m
         </div>
-      )}
+
+        <button
+          className="p-2 border rounded-sm border-blue-500 text-blue-500"
+          onClick={() => {
+            onChange(Mob.setInterval(mob, mob.interval + 1));
+          }}
+        >
+          <Icon.Plus />
+        </button>
+      </div>
+
+      <div className="flex justify-center">
+        <button
+          className="bg-blue-500 rounded-sm py-5 px-12 text-4xl text-gray-100"
+          disabled={mob.mobsters.length < 2}
+          onClick={onStart}
+        >
+          Go
+        </button>
+      </div>
+      <div className="bg-gray-200 p-4 w-2/3 space-y-3">
+        <h2 className="text-xl text-center text-gray-700">The Mobsters</h2>
+        <MobForm
+          autoFocus={Mob.count(mob) < 2}
+          onSubmit={(name) => {
+            onChange(Mob.addMobster(mob, name));
+          }}
+        />
+        {!Mob.hasMobsters(mob) && (
+          <div className="text-lg text-center text-gray-500 p-8">
+            Add at least two mobsters to start the timer!
+          </div>
+        )}
+        {Mob.hasMobsters(mob) && (
+          <div className="">
+            {Mob.getMobsters(mob).map((mobster) => {
+              return (
+                <MobsterListItem
+                  key={mobster.id}
+                  mobster={mobster}
+                  selected={Mob.isSelectedMobster(mob, mobster)}
+                  onRemove={() => {
+                    onChange(Mob.removeMobster(mob, mobster));
+                  }}
+                  onSelect={() => {
+                    onChange(Mob.setCurrentMobster(mob, mobster));
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -216,7 +256,17 @@ const MobTimerRunning = ({ mob, onSwitch, onStop, onZero }) => {
 const MobTimer = ({ id, mob, onChange, onNotify, timeDelta }) => {
   const [volume, setVolume] = useState(50);
   return (
-    <div>
+    <div className="flex flex-col h-screen">
+      <div className="flex space-x-2 text-sm text-gray-700 items-center p-2 justify-end">
+        <div>Volume:</div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={volume}
+          onChange={(e) => setVolume(parseInt(e.target.value, 10))}
+        />
+      </div>
       {{
         idle: () => (
           <MobTimerIdle
@@ -245,16 +295,6 @@ const MobTimer = ({ id, mob, onChange, onNotify, timeDelta }) => {
           />
         ),
       }[mob.state]()}
-      <div>
-        Volume:
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={volume}
-          onChange={(e) => setVolume(parseInt(e.target.value, 10))}
-        />
-      </div>
     </div>
   );
 };

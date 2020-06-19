@@ -54,5 +54,13 @@ export const setCurrentMobster = (mob, mobster) => ({
 
 export const removeMobster = (mob, mobster) => ({
   ...mob,
+  currentMobster: mobster.id === mob.currentMobster ? null : mob.currentMobster,
   mobsters: mob.mobsters.filter((x) => x.id !== mobster.id),
 });
+
+export const setInterval = (mob, interval) => ({
+  ...mob,
+  interval: Math.max(0, interval),
+});
+
+export const count = (mob) => mob.mobsters.length;

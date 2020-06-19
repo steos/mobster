@@ -11,3 +11,7 @@
 button:disabled {
   @apply opacity-50;
 }
+
+.view {
+  @apply p-4;
+}
