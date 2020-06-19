@@ -1,8 +1,9 @@
 {
   "scripts": {
     "start": "parcel src/index.html -d public",
-    "build": "parcel build src/index.html -d public",
-    "watch": "parcel watch src/index.html -d public"
+    "bundle": "parcel build src/index.html -d public",
+    "watch": "parcel watch src/index.html -d public",
+    "build": "node ./build.js"
   },
   "dependencies": {
     "classnames": "^2.2.6",
@@ -19,5 +20,8 @@
   },
   "browserslist": [
     "last 2 Chrome versions"
-  ]
+  ],
+  "devDependencies": {
+    "shelljs": "^0.8.4"
+  }
 }
