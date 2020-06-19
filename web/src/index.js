@@ -14,7 +14,7 @@ import * as Mob from "./Mob";
 
 export const computeRemaining = (now, interval, start) => {
   const elapsed = now - start;
-  const target = interval * 60000;
+  const target = interval * 6000;
   const remainingMillis = target - elapsed;
   const remainingSecs = Math.floor(remainingMillis / 1000);
   return {
@@ -189,36 +189,49 @@ const MobTimerRunning = ({ mob, onSwitch, onStop, onZero }) => {
 };
 
 const MobTimer = ({ id, mob, onChange, onNotify }) => {
-  if (mob.state === "idle") {
-    return (
-      <MobTimerIdle
-        mob={mob}
-        onChange={onChange}
-        onStart={() => {
-          if (mob.mobsters.length < 0) {
-            return;
-          }
-          onChange(Mob.startTimer(mob));
-        }}
-      />
-    );
-  } else if (mob.state === "running") {
-    return (
-      <MobTimerRunning
-        mob={mob}
-        onZero={() => onNotify(mob)}
-        onSwitch={() => {
-          // clearNotification();
-          onChange(Mob.switchMobster(mob));
-        }}
-        onStop={() => {
-          // clearNotification();
-          onChange(Mob.stopTimer(mob));
-        }}
-      />
-    );
-  }
-  return <Error />;
+  const [volume, setVolume] = useState(50);
+  return (
+    <div>
+      {{
+        idle: () => (
+          <MobTimerIdle
+            mob={mob}
+            onChange={onChange}
+            onStart={() => {
+              if (mob.mobsters.length < 0) {
+                return;
+              }
+              onChange(Mob.startTimer(mob));
+            }}
+          />
+        ),
+        running: () => (
+          <MobTimerRunning
+            mob={mob}
+            onZero={() => onNotify(mob, volume)}
+            onSwitch={() => {
+              // clearNotification();
+              onChange(Mob.switchMobster(mob));
+            }}
+            onStop={() => {
+              // clearNotification();
+              onChange(Mob.stopTimer(mob));
+            }}
+          />
+        ),
+      }[mob.state]()}
+      <div>
+        Volume:
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={volume}
+          onChange={(e) => setVolume(parseInt(e.target.value, 10))}
+        />
+      </div>
+    </div>
+  );
 };
 
 const RemoteData = {
@@ -294,11 +307,12 @@ const App = ({ audio }) => {
           <MobLoader
             id={match.params.id}
             onClearNotification={clearNotification}
-            onNotify={(mob) => {
+            onNotify={(mob, volume) => {
               if (window.captureScreen) {
                 window.captureScreen(location.href);
               } else {
                 if (audioRef.current) {
+                  audioRef.current.volume = volume / 100;
                   audioRef.current.play();
                 }
                 notification.current = new Notification("Switch it up!", {
