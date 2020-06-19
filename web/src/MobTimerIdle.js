@@ -61,39 +61,41 @@ const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
 const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
     <div className="space-y-8 flex flex-col items-center">
-      <div className="flex justify-center items-center">
-        <button
-          className="p-2 border rounded-sm border-blue-500 text-blue-500"
-          onClick={() => {
-            onChange(Mob.setInterval(mob, mob.interval - 1));
-          }}
-        >
-          <Icon.Minus />
-        </button>
-        <div className="text-6xl w-64 flex justify-center items-center">
+      <div className="flex flex-col items-center">
+        <div className="text-6xl">
           {mob.interval < 10 && "0"}
           {mob.interval}m
         </div>
+        <div className="flex flex justify-center items-center space-x-2">
+          <button
+            className="p-2 border rounded-sm border-blue-500 text-blue-500"
+            onClick={() => {
+              onChange(Mob.setInterval(mob, mob.interval - 1));
+            }}
+          >
+            <Icon.Minus />
+          </button>
+          <div className="flex justify-center flex-col items-center">
+            <button
+              disabled={mob.mobsters.length < 2}
+              onClick={onStart}
+              className="bg-blue-500 rounded-sm py-2 px-4 text-xl text-gray-100"
+            >
+              GO
+            </button>
+          </div>
 
-        <button
-          className="p-2 border rounded-sm border-blue-500 text-blue-500"
-          onClick={() => {
-            onChange(Mob.setInterval(mob, mob.interval + 1));
-          }}
-        >
-          <Icon.Plus />
-        </button>
+          <button
+            className="p-2 border rounded-sm border-blue-500 text-blue-500"
+            onClick={() => {
+              onChange(Mob.setInterval(mob, mob.interval + 1));
+            }}
+          >
+            <Icon.Plus />
+          </button>
+        </div>
       </div>
 
-      <div className="flex justify-center">
-        <button
-          className="bg-blue-500 rounded-sm py-5 px-12 text-4xl text-gray-100"
-          disabled={mob.mobsters.length < 2}
-          onClick={onStart}
-        >
-          Go
-        </button>
-      </div>
       <div className="bg-gray-200 p-4 w-2/3 space-y-3">
         <h2 className="text-xl text-center text-gray-700">The Mobsters</h2>
         <MobForm
