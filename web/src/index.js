@@ -32,10 +32,22 @@ export const computeRemainingNow = (interval, start) =>
 
 const Home = ({ onCreate }) => {
   return (
-    <div>
-      <button onClick={onCreate}>New Mob</button>
-      <h2>Your Previous Mobs</h2>
-      <p>list here</p>
+    <div className="space-y-8">
+      <h1 className="text-2xl text-gray-500 text-center m-8">
+        Ready, Set, Mob!
+      </h1>
+      <div className="flex justify-center">
+        <button
+          className="bg-blue-500 rounded-sm py-5 px-12 text-xl text-gray-100"
+          onClick={onCreate}
+        >
+          New Mob
+        </button>
+      </div>
+      <div>
+        <h2 className="text-center">Your Previous Mobs</h2>
+        <p className="text-center">list here</p>
+      </div>
     </div>
   );
 };
@@ -53,6 +65,7 @@ const MobForm = ({ onSubmit }) => {
       <h2>Add Mobster</h2>
       <input value={name} onChange={(e) => setName(e.target.value)} />
       <button
+        className="btn"
         onClick={() => {
           onSubmit(name);
           setName("");
@@ -71,6 +84,7 @@ const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
     </div>
     <div>{mobster.name}</div>
     <button
+      className="btn"
       onClick={(e) => {
         e.preventDefault();
         onRemove();
@@ -84,7 +98,11 @@ const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
 const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
     <div>
-      <button disabled={mob.mobsters.length < 2} onClick={onStart}>
+      <button
+        className="btn"
+        disabled={mob.mobsters.length < 2}
+        onClick={onStart}
+      >
         Start
       </button>
       <div>
@@ -133,8 +151,12 @@ const NextUp = ({ mob, onSwitch, onStop }) => (
   <div>
     <h2>Switch it up!</h2>
     <div>{Mob.nextMobster(mob).name}, it's your turn!</div>
-    <button onClick={onSwitch}>Switch</button>
-    <button onClick={onStop}>Stop</button>
+    <button className="btn" onClick={onSwitch}>
+      Switch
+    </button>
+    <button className="btn" onClick={onStop}>
+      Stop
+    </button>
   </div>
 );
 
@@ -146,7 +168,9 @@ const Countdown = ({ current, next, time, onStop }) => {
   return (
     <div>
       <CountdownTimer time={time} />
-      <button onClick={onStop}>Stop</button>
+      <button className="btn" onClick={onStop}>
+        Stop
+      </button>
       <div>Current Mobster: {current.name}</div>
       <div>Up next: {next.name}</div>
     </div>

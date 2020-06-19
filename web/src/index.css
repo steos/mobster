@@ -4,7 +4,7 @@
 
 @tailwind utilities;
 
-button {
+.btn {
   @apply bg-blue-500 rounded-sm p-1 text-gray-100;
 }
 
