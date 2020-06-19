@@ -13,7 +13,7 @@ import * as Mob from "./Mob";
 
 export const computeRemaining = (now, interval, start) => {
   const elapsed = now - start;
-  const target = interval * 6000;
+  const target = interval * 60000;
   const remainingMillis = target - elapsed;
   const remainingSecs = Math.floor(remainingMillis / 1000);
   return {
@@ -183,13 +183,17 @@ const MobTimer = ({ id, mob, onChange }) => {
       <MobTimerRunning
         mob={mob}
         onZero={() => {
-          notification.current = new Notification("Switch it up!", {
-            tag: "mobster-switch",
-            body: Mob.nextMobster(mob).name + ", it's your turn!",
-          });
-          notification.current.onclick = () => {
-            onChange(Mob.switchMobster(mob));
-          };
+          if (window.captureScreen) {
+            window.captureScreen(location.href);
+          } else {
+            notification.current = new Notification("Switch it up!", {
+              tag: "mobster-switch",
+              body: Mob.nextMobster(mob).name + ", it's your turn!",
+            });
+            notification.current.onclick = () => {
+              onChange(Mob.switchMobster(mob));
+            };
+          }
         }}
         onSwitch={() => {
           clearNotification();
