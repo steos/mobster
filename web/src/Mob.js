@@ -25,7 +25,7 @@ export const stopTimer = (mob) => ({ ...mob, state: "idle", start: null });
 export const startTimer = (mob) => ({
   ...mob,
   state: "running",
-  currentMobster: mob.currentMobster ?? mob.mobsters[0].id,
+  currentMobster: mob.currentMobster || mob.mobsters[0].id,
   start: new Date().getTime(),
 });
 
