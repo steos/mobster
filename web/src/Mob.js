@@ -11,6 +11,9 @@ export const nextMobster = (mob) => {
 export const currentMobster = (mob) =>
   mob.mobsters[findMobsterIndexById(mob, mob.currentMobster)];
 
+export const isSelectedMobster = (mob, mobster) =>
+  mob.currentMobster === mobster.id;
+
 export const switchMobster = (mob) => ({
   ...mob,
   currentMobster: nextMobster(mob).id,
@@ -41,4 +44,14 @@ export const createEmpty = () => ({
   currentMobster: null,
   state: "idle",
   start: null,
+});
+
+export const setCurrentMobster = (mob, mobster) => ({
+  ...mob,
+  currentMobster: mobster.id,
+});
+
+export const removeMobster = (mob, mobster) => ({
+  ...mob,
+  mobsters: mob.mobsters.filter((x) => x.id !== mobster.id),
 });

@@ -9,6 +9,7 @@ import {
 import shortid from "shortid";
 import firebase from "firebase/app";
 import "firebase/firestore";
+import * as Icon from "react-feather";
 import * as Mob from "./Mob";
 
 export const computeRemaining = (now, interval, start) => {
@@ -62,7 +63,22 @@ const MobForm = ({ onSubmit }) => {
   );
 };
 
-const MobsterListItem = ({ mobster }) => <div>{mobster.name}</div>;
+const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
+  <div className="flex space-x-2">
+    <div onClick={onSelect}>
+      {selected ? <Icon.CheckCircle /> : <Icon.Circle />}
+    </div>
+    <div>{mobster.name}</div>
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        onRemove();
+      }}
+    >
+      <Icon.Trash />
+    </button>
+  </div>
+);
 
 const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
@@ -92,7 +108,19 @@ const MobTimerIdle = ({ mob, onChange, onStart }) => {
       {Mob.hasMobsters(mob) && (
         <div>
           {Mob.getMobsters(mob).map((mobster) => {
-            return <MobsterListItem key={mobster.id} mobster={mobster} />;
+            return (
+              <MobsterListItem
+                key={mobster.id}
+                mobster={mobster}
+                selected={Mob.isSelectedMobster(mob, mobster)}
+                onRemove={() => {
+                  onChange(Mob.removeMobster(mob, mobster));
+                }}
+                onSelect={() => {
+                  onChange(Mob.setCurrentMobster(mob, mobster));
+                }}
+              />
+            );
           })}
         </div>
       )}
@@ -170,7 +198,6 @@ const MobTimer = ({ id, mob, onChange }) => {
         mob={mob}
         onChange={onChange}
         onStart={() => {
-          // console.log("onstart");
           if (mob.mobsters.length < 0) {
             return;
           }
