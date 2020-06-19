@@ -9,7 +9,7 @@ import {
 import shortid from "shortid";
 import firebase from "firebase/app";
 import "firebase/firestore";
-import * as Icon from "react-feather";
+import * as Icon from "./icons";
 import * as Mob from "./Mob";
 
 export const computeRemaining = (now, interval, start) => {
