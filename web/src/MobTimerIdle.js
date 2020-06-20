@@ -61,12 +61,8 @@ const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
 const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
     <div className="space-y-8 flex flex-col items-center">
-      <div className="flex flex-col items-center">
-        <div className="text-6xl">
-          {mob.interval < 10 && "0"}
-          {mob.interval}m
-        </div>
-        <div className="flex flex justify-center items-center space-x-2">
+      <div className="flex flex-col items-center md:w-2/3 w-5/6 bg-gray-100 p-4">
+        <div className="flex flex justify-center items-center space-x-10">
           <button
             className="p-2 border rounded-sm border-blue-500 text-blue-500"
             onClick={() => {
@@ -75,16 +71,16 @@ const MobTimerIdle = ({ mob, onChange, onStart }) => {
           >
             <Icon.Minus />
           </button>
+
           <div className="flex justify-center flex-col items-center">
             <button
               disabled={mob.mobsters.length < 2}
               onClick={onStart}
-              className="bg-blue-500 rounded-sm py-2 px-4 text-xl text-gray-100"
+              className="bg-blue-500 rounded-sm p-4 text-xl text-gray-100"
             >
-              GO
+              <Icon.Play size={36} />
             </button>
           </div>
-
           <button
             className="p-2 border rounded-sm border-blue-500 text-blue-500"
             onClick={() => {
@@ -94,9 +90,13 @@ const MobTimerIdle = ({ mob, onChange, onStart }) => {
             <Icon.Plus />
           </button>
         </div>
+        <div className="text-6xl text-gray-700">
+          {mob.interval < 10 && "0"}
+          {mob.interval}m
+        </div>
       </div>
 
-      <div className="bg-gray-200 p-4 w-2/3 space-y-3">
+      <div className="bg-gray-100 p-4 md:w-2/3 w-5/6 space-y-3">
         <h2 className="text-xl text-center text-gray-700">The Mobsters</h2>
         <MobForm
           autoFocus={Mob.count(mob) < 2}

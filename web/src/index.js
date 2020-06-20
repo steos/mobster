@@ -33,7 +33,7 @@ const MobLoader = ({ id, timeDelta, onNotify, onClearNotification }) => {
   const [mob, setMob] = useState(RemoteData.Loading);
   const docRef = firebase.firestore().collection("mobs").doc(id);
   useEffect(() => {
-    docRef.onSnapshot((doc) => {
+    return docRef.onSnapshot((doc) => {
       if (doc.exists) {
         setMob(RemoteData.Loaded(doc.data()));
       } else {
