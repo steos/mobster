@@ -61,7 +61,7 @@ const MobsterListItem = ({ mobster, selected, onSelect, onRemove }) => (
 const MobTimerIdle = ({ mob, onChange, onStart }) => {
   return (
     <div className="space-y-8 flex flex-col items-center">
-      <div className="flex flex-col items-center md:w-2/3 w-5/6 bg-gray-100 p-4">
+      <div className="flex flex-col items-center w-5/6 md:w-2/3 bg-gray-100 p-4">
         <div className="flex flex justify-center items-center space-x-10">
           <button
             className="p-2 border rounded-sm border-blue-500 text-blue-500"
