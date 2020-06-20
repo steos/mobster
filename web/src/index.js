@@ -16,11 +16,17 @@ import MobTimer from "./MobTimer";
 
 import * as Mob from "./Mob";
 
-const Loading = () => <div>loading</div>;
+const Loading = () => (
+  <div className="text-2xl text-center text-gray-500 p-8">loading</div>
+);
 
-const NotFound = () => <div>not found</div>;
+const NotFound = () => (
+  <div className="text-2xl text-center text-gray-500 p-8">not found</div>
+);
 
-const Error = () => <div>error</div>;
+const Error = () => (
+  <div className="text-2xl text-center text-gray-500 p-8">error</div>
+);
 
 const RemoteData = {
   Loaded: (data) => ({ type: "loaded", data }),
@@ -87,7 +93,11 @@ const App = ({ audio, timeDelta }) => {
     });
   }, [audio]);
   if (creating) {
-    return <div>creating</div>;
+    return (
+      <div className="text-2xl text-center text-gray-500 p-8">
+        creating mob, please wait
+      </div>
+    );
   }
   return (
     <Switch>
