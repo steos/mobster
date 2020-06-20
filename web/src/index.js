@@ -35,9 +35,30 @@ const RemoteData = {
   Loading: { type: "loading" },
 };
 
-const MobLoader = ({ id, timeDelta, onNotify, onClearNotification }) => {
+const MobLoader = ({ id, timeDelta, audio }) => {
   const [mob, setMob] = useState(RemoteData.Loading);
   const docRef = firebase.firestore().collection("mobs").doc(id);
+  const notification = React.useRef(null);
+  const audioRef = useRef(null);
+
+  const clearNotification = () => {
+    if (notification.current) {
+      notification.current.close();
+      notification.current = null;
+    }
+  };
+
+  const update = (mob) => {
+    clearNotification();
+    docRef.set(mob);
+  };
+
+  useEffect(() => {
+    loadAudio(audio).then((audio) => {
+      audioRef.current = audio;
+    });
+  }, [audio]);
+
   useEffect(() => {
     return docRef.onSnapshot((doc) => {
       if (doc.exists) {
@@ -56,12 +77,25 @@ const MobLoader = ({ id, timeDelta, onNotify, onClearNotification }) => {
       <MobTimer
         id={id}
         mob={data}
-        onNotify={onNotify}
-        timeDelta={timeDelta}
-        onChange={(mob) => {
-          onClearNotification();
-          docRef.set(mob);
+        onNotify={(mob, volume) => {
+          if (window.captureScreen) {
+            window.captureScreen(location.href);
+          } else {
+            if (audioRef.current) {
+              audioRef.current.volume = volume / 100;
+              audioRef.current.play();
+            }
+            notification.current = new Notification("Switch it up!", {
+              tag: "mobster-switch",
+              body: Mob.nextMobster(mob).name + ", it's your turn!",
+            });
+            notification.current.onclick = () => {
+              update(Mob.switchMobster(mob));
+            };
+          }
         }}
+        timeDelta={timeDelta}
+        onChange={update}
       />
     ),
   }[mob.type](mob);
@@ -79,19 +113,7 @@ const loadAudio = (path) => {
 const App = ({ audio, timeDelta }) => {
   const history = useHistory();
   const [creating, setCreating] = useState(false);
-  const audioRef = useRef(null);
-  const notification = React.useRef(null);
-  const clearNotification = () => {
-    if (notification.current) {
-      notification.current.close();
-      notification.current = null;
-    }
-  };
-  useEffect(() => {
-    loadAudio(audio).then((audio) => {
-      audioRef.current = audio;
-    });
-  }, [audio]);
+
   if (creating) {
     return (
       <div className="text-2xl text-center text-gray-500 p-8">
@@ -103,28 +125,7 @@ const App = ({ audio, timeDelta }) => {
     <Switch>
       <Route path="/mob/:id">
         {({ match }) => (
-          <MobLoader
-            id={match.params.id}
-            onClearNotification={clearNotification}
-            timeDelta={timeDelta}
-            onNotify={(mob, volume) => {
-              if (window.captureScreen) {
-                window.captureScreen(location.href);
-              } else {
-                if (audioRef.current) {
-                  audioRef.current.volume = volume / 100;
-                  audioRef.current.play();
-                }
-                notification.current = new Notification("Switch it up!", {
-                  tag: "mobster-switch",
-                  body: Mob.nextMobster(mob).name + ", it's your turn!",
-                });
-                notification.current.onclick = () => {
-                  onChange(Mob.switchMobster(mob));
-                };
-              }
-            }}
-          />
+          <MobLoader id={match.params.id} timeDelta={timeDelta} audio={audio} />
         )}
       </Route>
       <Route path="/">
