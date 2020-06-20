@@ -32,18 +32,41 @@ const NextUp = ({ mob, onSwitch, onStop }) => (
 );
 
 const CountdownTimer = ({ time }) => {
-  return <div>T-{time} sec</div>;
+  const minutes = Math.floor(time / 60);
+  const seconds = time - minutes * 60;
+
+  return (
+    <div className="text-6xl text-gray-700 flex items-center">
+      {minutes < 10 && "0"}
+      {minutes}:{seconds < 10 && "0"}
+      {seconds}
+    </div>
+  );
 };
 
 const Countdown = ({ current, next, time, onStop }) => {
   return (
-    <div>
-      <CountdownTimer time={time} />
-      <button className="btn" onClick={onStop}>
-        Stop
-      </button>
-      <div>Current Mobster: {current.name}</div>
-      <div>Up next: {next.name}</div>
+    <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center bg-gray-100 w-5/6 md:w-2/3 p-4 space-y-8">
+        <CountdownTimer time={time} />
+        <button
+          className="bg-red-500 rounded-sm py-2 px-4 text-gray-100"
+          onClick={onStop}
+        >
+          Stop
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center">
+            <h2 className="text text-gray-500">Current Mobster</h2>
+            <div className="text-3xl text-gray-600">{current.name}</div>
+          </div>
+          <div className="flex flex-col items-center">
+            <h2 className="text text-gray-500">Up next</h2>
+            <div className="text-3xl text-gray-600">{next.name}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
