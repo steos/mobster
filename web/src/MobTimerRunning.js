@@ -19,15 +19,27 @@ const computeRemainingNow = (interval, start) =>
   computeRemaining(new Date().getTime(), interval, start);
 
 const NextUp = ({ mob, onSwitch, onStop }) => (
-  <div>
-    <h2>Switch it up!</h2>
-    <div>{Mob.nextMobster(mob).name}, it's your turn!</div>
-    <button className="btn" onClick={onSwitch}>
-      Switch
-    </button>
-    <button className="btn" onClick={onStop}>
-      Stop
-    </button>
+  <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center bg-gray-100 w-5/6 md:w-2/3 p-4 space-y-8">
+      <h2 className="text-2xl text-gray-600">Switch it up!</h2>
+      <div className="text-4xl break-all text-gray-700">
+        {Mob.nextMobster(mob).name}, it's your turn!
+      </div>
+      <div className="flex space-x-2">
+        <button
+          className="bg-blue-500 text-gray-100 px-4 py-2 rounded-sm text-xl"
+          onClick={onSwitch}
+        >
+          Switch
+        </button>
+        <button
+          className="bg-red-500 text-gray-100 px-4 py-2 rounded-sm text-xl"
+          onClick={onStop}
+        >
+          Stop
+        </button>
+      </div>
+    </div>
   </div>
 );
 
@@ -49,12 +61,6 @@ const Countdown = ({ current, next, time, onStop }) => {
     <div className="flex flex-col items-center">
       <div className="flex flex-col items-center bg-gray-100 w-5/6 md:w-2/3 p-4 space-y-8">
         <CountdownTimer time={time} />
-        <button
-          className="bg-red-500 rounded-sm py-2 px-4 text-gray-100"
-          onClick={onStop}
-        >
-          Stop
-        </button>
 
         <div className="flex flex-col items-center space-y-4">
           <div className="flex flex-col items-center">
@@ -66,6 +72,13 @@ const Countdown = ({ current, next, time, onStop }) => {
             <div className="text-3xl text-gray-600">{next.name}</div>
           </div>
         </div>
+
+        <button
+          className="bg-red-500 rounded-sm py-2 px-4 text-gray-100"
+          onClick={onStop}
+        >
+          Stop
+        </button>
       </div>
     </div>
   );
