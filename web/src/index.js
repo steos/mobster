@@ -190,7 +190,7 @@ const main = async () => {
   // console.log(data.delta, delta);
   // console.log({ data, now, roundtrip });
   const timeDelta = delta;
-  console.debug("time delta", timeDelta);
+  // console.debug("time delta", timeDelta);
   render(timeDelta);
 };
 

@@ -22,13 +22,12 @@ export const switchMobster = (mob) => ({
 
 export const stopTimer = (mob) => ({ ...mob, state: "idle", start: null });
 
-export const startTimer = (mob, drift) =>
-  console.log("startTimer", drift) || {
-    ...mob,
-    state: "running",
-    currentMobster: mob.currentMobster || mob.mobsters[0].id,
-    start: new Date().getTime(),
-  };
+export const startTimer = (mob, drift) => ({
+  ...mob,
+  state: "running",
+  currentMobster: mob.currentMobster || mob.mobsters[0].id,
+  start: new Date().getTime(),
+});
 
 export const addMobster = (mob, name) => ({
   ...mob,

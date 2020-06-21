@@ -6,6 +6,19 @@ import * as Icon from "./icons";
 
 const MobTimer = ({ id, mob, onChange, onNotify, timeDelta }) => {
   const [volume, setVolume] = useState(50);
+
+  useEffect(() => {
+    const vol = localStorage.getItem("audio-volume");
+    if (vol) {
+      setVolume(parseInt(vol, 10));
+    }
+  }, []);
+
+  const changeVolume = (volume) => {
+    setVolume(volume);
+    localStorage.setItem("audio-volume", volume);
+  };
+
   const canNotify = Notification.permission === "granted";
   return (
     <div className="flex flex-col h-screen">
@@ -26,7 +39,7 @@ const MobTimer = ({ id, mob, onChange, onNotify, timeDelta }) => {
             min="0"
             max="100"
             value={volume}
-            onChange={(e) => setVolume(parseInt(e.target.value, 10))}
+            onChange={(e) => changeVolume(parseInt(e.target.value, 10))}
           />
         </div>
         {{
